@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { getUserIdFromToken } from '../userChat/route';
 import Challenge from '@/model/challenge.model';
 import  connectDB  from '@/lib/initializeDB';
+import  '@/model/user.model';
+
 
 export async function GET(req) {
   try {
@@ -16,6 +18,8 @@ export async function GET(req) {
     if (!userId) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
+
+
 
     // Fetch public challenges and challenges the user has joined
     const challenges = await Challenge.find({
