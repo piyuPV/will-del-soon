@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { BicepsFlexed, Dumbbell, Salad, ArrowRight, UserCircle2 } from "lucide-react";
+import fithome from "../../public/devinefithome.jpg";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -117,7 +118,7 @@ export default function Home() {
               </div>
               <div className="absolute inset-0 flex items-center justify-center">
                 <Image
-                  src="/assets/fitness-avatar.png"
+                  src={fithome}
                   alt="Pixel Fitness Character"
                   width={300}
                   height={300}

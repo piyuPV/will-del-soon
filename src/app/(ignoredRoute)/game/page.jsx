@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Trophy, Star, Lock } from 'lucide-react';
@@ -35,14 +36,14 @@ const initialGames = [
   }
 ];
 
-const pariticpatedGames = async () => {
+const pariticipatedGames = async () => {
   try {
     const response = await fetch('/api/games', {method: 'GET' });
     if (!response.ok) {
       throw new Error('Network response was not ok');
     }
     const data = await response.json();
-    return data
+    return data.challenges
 
   } catch (error) {
     console.error('Error fetching games:', error);
@@ -51,13 +52,14 @@ const pariticpatedGames = async () => {
 }
 
 export default function GamePage() {
+  const router = useRouter();
   const [games, setGames] = useState(initialGames);
   const [error, setError] = useState(null);
 
 
   const {data: gamesData, isPending} = useQuery({
     queryKey: ['games'],
-    queryFn: pariticpatedGames,
+    queryFn: pariticipatedGames,
   })
 
   console.log(gamesData)
@@ -141,31 +143,44 @@ export default function GamePage() {
     });
   };
 
-  const handleLevelStart = (gameId, level) => {
+  const handleLevelStart = (game, level) => {
     try {
       setError(null);
-      const game = games.find(g => g.id === gameId);
       const levelData = game.levels[level - 1];
-
-      // Format URL to match exercise page expectations
-      const baseUrl = 'http://localhost:8080';
-      const searchParams = new URLSearchParams();
-
-      // Set the workout type radio button value
-      if (gameId === 'pushup') {
-        searchParams.set('type', 'pushup');
-        searchParams.set('exercise', 'pushups');
-      } else {
-        searchParams.set('type', 'squat');
-        searchParams.set('exercise', 'squats');
+      console.log(levelData, "LEVELDATA ------", levelData, "LEVEL ------", level, "GAME ------", game._id)
+      // Determine the server URL based on exercise type
+      let baseUrl;
+      const exerciseType = game.exerciseType;
+      
+      switch (exerciseType) {
+        case 'pushup':
+          baseUrl = `http://localhost:3000?gamechallenge=${game._id}&reps=${levelData.required}&level=${level}`; // Pushup server
+          break;
+        case 'squat':
+          baseUrl = `http://localhost:3001?gamechallenge=${game._id}&reps=${levelData.required}&level=${level}`; // Squat server
+          break;
+        case 'bicep':
+          baseUrl = `http://localhost:3002?gamechallenge=${game._id}&reps=${levelData.required}&level=${level}`; // Bicep server
+          break;
+        default:
+          baseUrl = 'http://localhost:3000'; // Default fallback
       }
-
-      // Add level and target reps
-      searchParams.set('level', level.toString());
-      searchParams.set('target', levelData.required.toString());
-
-      // Redirect to exercise page
-      window.location.href = `${baseUrl}?${searchParams.toString()}`;
+      
+      router.push(baseUrl); // Redirect to the appropriate server URL
+      // Format URL to match exercise page expectations
+      // const searchParams = new URLSearchParams();
+  
+      // // Set the workout type and exercise
+      // searchParams.set('type', exerciseType);
+      // searchParams.set('exercise', `${exerciseType}s`); // Add 's' for plural form
+  
+      // // Add level, target reps and challenge ID
+      // searchParams.set('level', level.toString());
+      // searchParams.set('target', levelData.required.toString());
+      // searchParams.set('challengeId', game.id); // Include actual challenge ID
+  
+      // // Redirect to exercise page
+      // window.location.href = `${baseUrl}?${searchParams.toString()}`;
     } catch (err) {
       console.error('Error starting exercise:', err);
       setError('Unable to start exercise. Please try again later.');
@@ -188,7 +203,7 @@ export default function GamePage() {
 
       {/* Game Cards Stack */}
       <div className="space-y-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-        {games.map((game) => (
+        {!isPending && gamesData.map((game) => (
           <div
             key={game.id}
             className="bg-[#8B4513] rounded-lg overflow-hidden p-4"
@@ -255,13 +270,13 @@ export default function GamePage() {
                   <Star className="w-5 h-5 mx-auto mb-1 text-[#FFD700]" fill="#FFD700" />
                   <div className="text-xs text-gray-300">Total Stars</div>
                   <div className="text-lg font-bold text-white">
-                    {game.levels.reduce((sum, level) => sum + level.stars, 0)}/15
+                    {game.levels.reduce((sum, level) => sum + level.stars, 0)}/{game.levels.length * 3}
                   </div>
                 </div>
               </div>
 
               <button
-                onClick={() => handleLevelStart(game.id, game.currentLevel)}
+                onClick={() => handleLevelStart(game, game.currentLevel)}
                 className="px-4 py-2 bg-[#A0522D] hover:bg-[#8B4513] rounded-lg text-white text-sm font-bold transition-colors whitespace-nowrap"
               >
                 CONTINUE LEVEL {game.currentLevel}

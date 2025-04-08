@@ -12,7 +12,7 @@ const challengeSchema = new mongoose.Schema({
   exerciseType: {
     type: String,
     required: true,
-    enum: ['pushup', 'squat', 'other'], // Add constraints for exercise types
+    enum: ['pushup', 'squat', 'bicep'], // Add constraints for exercise types
   },
   isPublic: {
     type: Boolean,

@@ -188,7 +188,7 @@ export default function CreateChallengePage() {
                   <SelectContent>
                     <SelectItem value="pushup">Push-up</SelectItem>
                     <SelectItem value="squat">Squat</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
+                    <SelectItem value="bicep">Biceo curl</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage className="text-[#D32F2F]" />
