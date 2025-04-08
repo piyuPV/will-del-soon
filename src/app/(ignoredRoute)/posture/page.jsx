@@ -1,8 +1,9 @@
 "use client"
 
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import VideoStreamer from '@/components/VideoStreamer'
+import BicepCamera from '@/components/BicepCamera'
 import { Card } from '@/components/ui/card'
 import { useRouter } from 'next/navigation'
 
@@ -18,9 +19,6 @@ const exercises = [
 function PosturePage() {
   const [selectedExercise, setSelectedExercise] = useState(null)
   const router = useRouter()
-  // const videoRef = useRef(null)
-  // const streamRef = useRef(null)
-  // const wsRef = useRef(null)
 
   // Handle exercise selection
   const selectExercise = (exercise) => {
@@ -33,117 +31,6 @@ function PosturePage() {
     // For other exercises, continue with the normal flow
     setSelectedExercise(exercise)
   }
-
-  // Start webcam and analysis
-  // const startAnalysis = async () => {
-  //   try {
-  //     console.log('Starting webcam...')
-  //     // Get webcam stream
-  //     const stream = await navigator.mediaDevices.getUserMedia({
-  //       video: { width: 640, height: 480 }
-  //     })
-
-  //     streamRef.current = stream
-  //     videoRef.current.srcObject = stream
-
-  //     // Connect to WebSocket server
-  //     const ws = new WebSocket('ws://localhost:8000/posture-analysis')
-  //     wsRef.current = ws
-
-  //     ws.onopen = () => {
-  //       console.log('Connected to Python backend')
-  //       setIsAnalyzing(true)
-
-  //       // Send exercise type to backend
-  //       ws.send(JSON.stringify({
-  //         type: 'exercise_selection',
-  //         exercise: selectedExercise.id
-  //       }))
-
-  //       // Start sending frames
-  //       sendVideoFrames()
-  //     }
-
-  //     ws.onmessage = (event) => {
-  //       const data = JSON.parse(event.data)
-
-  //       if (data.type === 'feedback') {
-  //         setFeedback(data.message)
-  //       } else if (data.type === 'rep_count') {
-  //         setRepCount(data.count)
-  //       }
-  //     }
-
-  //     ws.onclose = () => {
-  //       console.log('Connection closed')
-  //       stopAnalysis()
-  //     }
-
-  //     ws.onerror = (error) => {
-  //       console.error('WebSocket error:', error)
-  //       setError('Failed to connect to the analysis server.')
-  //       stopAnalysis()
-  //     }
-  //   } catch (error) {
-  //     console.error('Error starting webcam:', error)
-  //     setError(`Error: ${error.message || 'Could not access webcam'}`)
-  //     stopAnalysis()
-  //   }
-  // }
-
-  // // Function to send video frames to backend
-  // const sendVideoFrames = () => {
-  //   const canvas = document.createElement('canvas')
-  //   canvas.width = 640
-  //   canvas.height = 480
-  //   const ctx = canvas.getContext('2d')
-
-  //   const sendFrame = () => {
-  //     if (videoRef.current && wsRef.current && wsRef.current.readyState === WebSocket.OPEN && isAnalyzing) {
-  //       // Draw current video frame to canvas
-  //       ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height)
-
-  //       // Convert canvas to blob and send to backend
-  //       canvas.toBlob((blob) => {
-  //         wsRef.current.send(blob)
-
-  //         // Schedule next frame
-  //         requestAnimationFrame(sendFrame)
-  //       }, 'image/jpeg', 0.7) // Medium quality JPEG for performance
-  //     }
-  //   }
-
-  //   sendFrame()
-  // }
-
-  // // Stop analysis and cleanup
-  // const stopAnalysis = () => {
-  //   setIsAnalyzing(false)
-
-  //   // Close WebSocket connection
-  //   if (wsRef.current) {
-  //     wsRef.current.close()
-  //     wsRef.current = null
-  //   }
-
-  //   // Stop webcam stream
-  //   if (streamRef.current) {
-  //     streamRef.current.getTracks().forEach(track => track.stop())
-  //     streamRef.current = null
-  //   }
-
-  //   // Clear video source
-  //   if (videoRef.current) {
-  //     videoRef.current.srcObject = null
-  //   }
-  // }
-
-  // // Cleanup on unmount
-  // useEffect(() => {
-  //   return () => {
-  //     stopAnalysis()
-  //   }
-  // }, [])
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -175,11 +62,13 @@ function PosturePage() {
             ))}
           </div>
         </div>
+      ) : selectedExercise.id === 'biceps' ? (
+        <BicepCamera setSelectedExercise={setSelectedExercise} />
       ) : (
         <VideoStreamer
           icon={selectedExercise.icon}
           name={selectedExercise.name}
-          setSelectedExercise={() => setSelectedExercise(null)}
+          setSelectedExercise={setSelectedExercise}
         />
       )}
     </div>

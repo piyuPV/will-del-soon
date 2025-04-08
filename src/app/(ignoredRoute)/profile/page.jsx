@@ -7,9 +7,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { toast } from 'react-hot-toast';
 import Image from 'next/image';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon, Loader2, Save, User } from 'lucide-react';
+import { CalendarIcon, Loader2, Save, User, ChevronLeft, ChevronRight } from 'lucide-react';
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -100,6 +100,19 @@ const updateUserProfile = async (data) => {
     throw new Error('Failed to update user profile');
   }
 }
+
+// Helper function to safely format date
+const safeFormatDate = (date) => {
+  if (!date) return null;
+  try {
+    // If date is a string, parse it first
+    const dateObj = typeof date === 'string' ? parseISO(date) : date;
+    return format(dateObj, "PPP");
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return null;
+  }
+};
 
 function ProfilePage() {
   const queryClient = useQueryClient();
@@ -301,43 +314,77 @@ function ProfilePage() {
                   <FormField
                     control={form.control}
                     name="dob"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>Date of Birth</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
+                    render={({ field }) => {
+                      const [selectedMonth, setSelectedMonth] = useState(field.value || new Date());
+                      
+                      return (
+                        <FormItem className="flex flex-col">
+                          <FormLabel>Date of Birth</FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
                               <Button
                                 variant={"outline"}
                                 className={cn(
-                                  "w-full pl-3 text-left font-normal",
+                                  "w-full justify-start text-left font-normal",
                                   !field.value && "text-muted-foreground"
                                 )}
                               >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
                                 {field.value ? (
-                                  format(field.value, "PPP")
+                                  safeFormatDate(field.value) || <span>Invalid date</span>
                                 ) : (
                                   <span>Pick a date</span>
                                 )}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                               </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={field.value}
-                              onSelect={field.onChange}
-                              disabled={(date) =>
-                                date > new Date() || date < new Date("1900-01-01")
-                              }
-                              initialFocus
-                            />
-                          </PopoverContent>
-                        </Popover>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <div className="space-y-4 p-3">
+                                <div className="flex items-center justify-between space-x-2">
+                                  <select
+                                    value={field.value ? new Date(field.value).getFullYear() : new Date().getFullYear()}
+                                    onChange={(e) => {
+                                      const year = parseInt(e.target.value);
+                                      const newDate = field.value ? new Date(field.value) : new Date();
+                                      newDate.setFullYear(year);
+                                      // Ensure we're not exceeding the days in the month after year change
+                                      const daysInMonth = new Date(year, newDate.getMonth() + 1, 0).getDate();
+                                      if (newDate.getDate() > daysInMonth) {
+                                        newDate.setDate(daysInMonth);
+                                      }
+                                      field.onChange(newDate);
+                                      setSelectedMonth(newDate);
+                                    }}
+                                    className="px-2 py-1 border rounded-md"
+                                  >
+                                    {Array.from({ length: 124 }, (_, i) => new Date().getFullYear() - i).map((year) => (
+                                      <option key={year} value={year}>
+                                        {year}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                                <Calendar
+                                  mode="single"
+                                  selected={field.value}
+                                  onSelect={(date) => {
+                                    field.onChange(date);
+                                    setSelectedMonth(date || new Date());
+                                  }}
+                                  month={selectedMonth}
+                                  onMonthChange={setSelectedMonth}
+                                  disabled={(date) =>
+                                    date > new Date() || date < new Date("1900-01-01")
+                                  }
+                                  initialFocus
+                                  className="rounded-md border"
+                                />
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
                   />
                 </div>
 

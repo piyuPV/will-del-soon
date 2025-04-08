@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Layout, CandyOff, User, Dumbbell, BicepsFlexed } from "lucide-react";
+import { Layout, CandyOff, User, Dumbbell, BicepsFlexed, Trophy } from "lucide-react";
 import { NavMain } from "@/components/NavMain";
 import {
   Sidebar,
@@ -36,16 +36,25 @@ const data = {
       icon: Dumbbell,
     },
     {
+      name: "Gamification",
+      url: "/game",
+      icon: Trophy,
+    },
+    {
       name: "Diet Plan",
       url: "/dietplan",
       icon: CandyOff,
+    },
+    {
+      name: "Challenges",
+      url: "/challenges",
+      icon: Trophy,
     },
     {
       name: "Profile",
       url: "/profile",
       icon: User,
     },
-
   ],
 };
 

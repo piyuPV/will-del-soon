@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { Mic, Bot, SendHorizonal, X } from 'lucide-react';
+import { Mic, Bot, SendHorizonal, X, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { Input } from './ui/input';
@@ -17,31 +17,43 @@ export const fetchChatHistory = async () => {
 
     if (!response.ok) {
       throw new Error(response.statusText);
-      }
-      const chatHis = await response.json();
-      return chatHis.messages;
+    }
+    const data = await response.json();
+    return data.messages || []; // Ensure we return an array
   } catch (error) {
     console.error('Error fetching chat history:', error);
-    throw new Error('Failed to fetch chat history');
+    return []; // Return empty array on error
   }
 }
 
 export const sendQuery= async (query) => {
   try {
-    const backendUrl = process.env.NEXT_PUBLIC_PY_URL
-    console.log('Sending message to backend:',backendUrl, query);
-    const response = await fetch('/api/userChat', {
+    const backendUrl = process.env.NEXT_PUBLIC_PY_URL;
+
+    // Make sure we're not adding an extra /chat if it's already in the URL
+    const chatEndpoint = backendUrl.endsWith('/chat') ? backendUrl : `${backendUrl}/chat`;
+
+    console.log('Sending message to backend:',chatEndpoint, query);
+    const response = await fetch(chatEndpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({message:query}),  
     });
 
     if (!response.ok) {
-      throw new Error('Network response was not ok');
+      console.error('Backend response not OK:', {
+        status: response.status,
+        statusText: response.statusText,
+        url: chatEndpoint
+      });
+      const errorText = await response.text();
+      console.error('Backend error response:', errorText);
+      throw new Error(`Failed to get response from AI backend: ${response.status} ${response.statusText}`);
     }
 
     const data = await response.json();
-    return data.messages;
+    console.log('Backend response:', data);
+    return data.response || "Sorry, I couldn't process your request at this time.";
   } catch (error) {
     console.error('Chat error:', error);
     toast.error('Failed to get response');
@@ -400,8 +412,19 @@ export default function MentorChatBot() {
 
   const chatMutation = useMutation({
     mutationFn: sendQuery,
-    onSuccess: (data) => {
-      queryClient.setQueryData(['userChat'], data);
+    onSuccess: (response) => {
+      // Add both user message and bot response to the messages array
+      const newMessages = [
+        { text: textInput, isUser: true },
+        { text: response, isUser: false }
+      ];
+      
+      // Update the messages in the query client
+      queryClient.setQueryData(['userChat'], (old) => {
+        const currentMessages = Array.isArray(old) ? old : [];
+        return [...currentMessages, ...newMessages];
+      });
+      
       setTextInput('');
     },
     onSettled: () => {
@@ -412,7 +435,7 @@ export default function MentorChatBot() {
         }
       }, 100);
     }
-  })
+  });
 
   const handleSend = async () => {
     if(!textInput.trim()){
@@ -435,6 +458,28 @@ export default function MentorChatBot() {
   };
 
   useEffect(scrollToBottom, [messages]);
+
+  const clearMessages = async () => {
+    try {
+      const response = await fetch('/api/userChat', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to clear messages');
+      }
+
+      // Clear messages in the UI
+      queryClient.setQueryData(['userChat'], []);
+      toast.success('Messages cleared');
+    } catch (error) {
+      console.error('Error clearing messages:', error);
+      toast.error('Failed to clear messages');
+    }
+  };
 
   return (
     <div className="fixed bottom-4 right-4 z-[9999]">
@@ -462,12 +507,21 @@ export default function MentorChatBot() {
               <Bot size={20} />
               <h2 className="text-lg font-bold tracking-wide uppercase">Mentor Bot</h2>
             </div>
-            <button
-              onClick={() => setIsOpen(false)}
-              className="p-1 rounded hover:bg-[#5D4037] transition-colors"
-            >
-              <X size={18} />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={clearMessages}
+                className="p-1 rounded hover:bg-[#5D4037] transition-colors"
+                title="Clear messages"
+              >
+                <Trash2 size={18} />
+              </button>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="p-1 rounded hover:bg-[#5D4037] transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
           </div>
           
           {/* Chat Messages Area */}
@@ -484,18 +538,26 @@ export default function MentorChatBot() {
                 Ask me anything about your fitness quest!
               </div>
             ) : (
-              !isPending && userBotMessages?.map((message, index) => (
+              !isPending && Array.isArray(userBotMessages) && userBotMessages.map((message, index) => (
                 <div
                   key={index}
                   className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-[80%] p-3 border-2 ${message.isUser
+                    className={`max-w-[80%] p-3 border-2 whitespace-pre-wrap ${message.isUser
                       ? 'bg-[#FF6D00] border-[#3E2723] text-[#3E2723] font-semibold shadow-[2px_2px_0_#3E2723]'
                       : 'bg-[#795548] border-[#3E2723] text-[#FFD54F] shadow-[2px_2px_0_#3E2723]'
                     }`}
                   >
-                    {message.text}
+                    {message.text.split('**').map((part, i) => 
+                      i % 2 === 0 ? (
+                        part
+                      ) : (
+                        <span key={i} className="font-bold">
+                          {part}
+                        </span>
+                      )
+                    )}
                   </div>
                 </div>
               ))
@@ -535,7 +597,7 @@ export default function MentorChatBot() {
               <Input
                 type="text"
                 disabled={isRecording || chatMutation.isPending}
-                value={textInput}
+                value={textInput || ''}
                 onChange={(e) => setTextInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSend()}
                 placeholder="Type your message..."

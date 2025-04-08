@@ -60,24 +60,38 @@ export const calculateAge = (dob) => {
   return age
 }
 
+const backendUrl = process.env.NEXT_PUBLIC_PY_URL;
+
+// Make sure we're not adding an extra /chat if it's already in the URL
+const dietEndpoint = backendUrl.endsWith('/chat') 
+  ? backendUrl.replace('/chat', '/diet') 
+  : `${backendUrl}/diet`;
+
 const fetchDietPlan = async (data) => {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_PY_URL}/diet-plan`,{
+    const response = await fetch(dietEndpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
-      })
+    })
 
-      if (!response.ok) {
-        throw new Error(response.statusText)
-      }
-      const result = await response.json()
-      return result.diet_plan
+    if (!response.ok) {
+      throw new Error('Failed to fetch diet plan');
+    }
+
+    const result = await response.json();
+    
+    // Format the diet plan text
+    let formattedText = result.diet_plan
+      .replace(/\*\*([^*]+)\*\*/g, (_, text) => `**${text}**`) // Keep bold text as is
+      .replace(/\* /g, '\n* '); // Add newline before bullet points
+    
+    return formattedText;
   } catch (error) {
-    console.error("Error fetching diet plan:", error)
-    throw new Error("Failed to fetch diet plan")
+    console.error('Error:', error);
+    throw error;
   }
 }
 
@@ -383,12 +397,37 @@ function DietPlanPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="whitespace-pre-wrap">
-              {typeof dietPlan === 'string' ? dietPlan : JSON.stringify(dietPlan, null, 2)}
+            <div className="prose prose-lg max-w-none whitespace-pre-wrap">
+              {dietPlan && typeof dietPlan === 'string' ? (
+                dietPlan.split('**').map((part, i) => 
+                  i % 2 === 0 ? (
+                    <React.Fragment key={i}>
+                      {part.split('\n').map((line, j) => (
+                        <React.Fragment key={j}>
+                          {line.startsWith('* ') ? (
+                            <li className="text-[#3E2723]">{line.substring(2)}</li>
+                          ) : (
+                            line && <p className="text-[#3E2723]">{line}</p>
+                          )}
+                        </React.Fragment>
+                      ))}
+                    </React.Fragment>
+                  ) : (
+                    <strong key={i} className="text-[#3E2723] font-bold">
+                      {part}
+                    </strong>
+                  )
+                )
+              ) : (
+                <p className="text-[#3E2723]">Loading your diet plan...</p>
+              )}
             </div>
             <Button
               className="mt-6"
-              onClick={() => setDietPlan(null)}
+              onClick={() => {
+                setDietPlan(null);
+                form.reset();
+              }}
             >
               Create Another Plan
             </Button>

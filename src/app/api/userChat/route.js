@@ -21,6 +21,9 @@ export const getUserIdFromToken = (request) => {
   }
 };
 
+// In-memory store for chat messages (in a real app, this would be a database)
+let chatHistory = [];
+
 // GET chat history
 export async function GET(request) {
   try {
@@ -70,18 +73,35 @@ export async function POST(request) {
     
     // Get response from AI backend
     const backendUrl = process.env.NEXT_PUBLIC_PY_URL;
-    const aiResponse = await fetch(`${backendUrl}/chat`, {
+
+    // Make sure we're not adding an extra /chat if it's already in the URL
+    const chatEndpoint = backendUrl.endsWith('/chat') ? backendUrl : `${backendUrl}/chat`;
+
+    const response = await fetch(chatEndpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message }),
     });
     
-    if (!aiResponse.ok) {
-      throw new Error('Failed to get response from AI backend');
+    if (!response.ok) {
+      console.error('Backend response not OK:', {
+        status: response.status,
+        statusText: response.statusText,
+        url: chatEndpoint
+      });
+      const errorText = await response.text();
+      console.error('Backend error response:', errorText);
+      throw new Error(`Failed to get response from AI backend: ${response.status} ${response.statusText}`);
     }
     
-    const aiData = await aiResponse.json();
-    const botReply = aiData.diet_plan || "Sorry, I couldn't process your request at this time.";
+    const aiData = await response.json();
+    console.log('Backend response:', aiData);
+    let botReply = aiData.response || "Sorry, I couldn't process your request at this time.";
+    
+    // Format the response to handle markdown-style formatting
+    botReply = botReply
+      .replace(/\*\*([^*]+)\*\*/g, (_, text) => `**${text}**`) // Keep bold text as is
+      .replace(/\* /g, '\n* '); // Add newline before bullet points
     
     // Add bot response to history
     await chat.addMessage(botReply, false);
@@ -96,6 +116,32 @@ export async function POST(request) {
     console.error('Error processing chat message:', error);
     return NextResponse.json(
       { message: 'Failed to process chat message', error: error.message },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE chat history
+export async function DELETE(request) {
+  try {
+    await connectDB();
+    
+    const userId = getUserIdFromToken(request);
+    if (!userId) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+    
+    // Get chat and clear messages
+    const chat = await Chat.getOrCreateChat(userId);
+    chat.messages = [];
+    await chat.save();
+    
+    return NextResponse.json({ message: "Chat history cleared" }, { status: 200 });
+    
+  } catch (error) {
+    console.error('Error clearing chat history:', error);
+    return NextResponse.json(
+      { message: 'Failed to clear chat history', error: error.message },
       { status: 500 }
     );
   }

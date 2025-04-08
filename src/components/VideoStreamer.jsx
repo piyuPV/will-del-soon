@@ -3,8 +3,6 @@ import io from 'socket.io-client';
 import { Button } from './ui/button';
 import { Card } from '@/components/ui/card'
 
-
-
 const SOCKET_SERVER_URL = 'http://localhost:5000'; // adjust as needed
 
 const VideoStreamer = ({ icon, name, setSelectedExercise }) => {
@@ -15,6 +13,7 @@ const VideoStreamer = ({ icon, name, setSelectedExercise }) => {
   const [intervalId, setIntervalId] = useState(null);
   const [feedback, setFeedback] = useState(null)
   const [repCount, setRepCount] = useState(0)
+
   // Initialize WebSocket connection
   useEffect(() => {
     socketRef.current = io(SOCKET_SERVER_URL, {
@@ -83,7 +82,7 @@ const VideoStreamer = ({ icon, name, setSelectedExercise }) => {
   return (
     <>
       <div className="flex flex-col lg:flex-row gap-8">
-        <div className="lg:w-2/3">
+        <div className="lg:w-1/2">
           <div className="bg-gray-100 rounded-lg overflow-hidden aspect-video relative">
             {!isStreaming && (
               <div className="absolute inset-0 flex items-center justify-center">
@@ -91,7 +90,6 @@ const VideoStreamer = ({ icon, name, setSelectedExercise }) => {
                   <div className="text-6xl mb-4">{icon}</div>
                   <h3 className="text-xl font-semibold mb-2">{name}</h3>
                   <p className="mb-4 text-gray-600">Ready to analyze your form</p>
-                  {/* Fixed button styling by using className only for custom colors */}
                   <Button
                     onClick={startStreaming}
                     className="bg-green-600 hover:bg-green-700 text-white transition-colors"
@@ -103,6 +101,16 @@ const VideoStreamer = ({ icon, name, setSelectedExercise }) => {
             )}
             <video ref={videoRef} width={320} height={240} className={`w-full h-full object-cover ${!isStreaming ? 'opacity-30' : ''}`} />
             <canvas ref={canvasRef} width={320} height={240} style={{ display: 'none' }} />
+            
+            {/* Video attachment label in bottom right */}
+            <div className="absolute bottom-4 right-4">
+              <div className="bg-black bg-opacity-50 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+                </svg>
+                <span>Attach Video</span>
+              </div>
+            </div>
           </div>
           {isStreaming && (
             <div className="mt-4 flex justify-center">
@@ -114,11 +122,9 @@ const VideoStreamer = ({ icon, name, setSelectedExercise }) => {
               </Button>
             </div>
           )}
-
         </div>
 
-
-        <div className="lg:w-1/3">
+        <div className="lg:w-1/2">
           <Card className="p-6">
             <h3 className="text-xl font-semibold mb-4">Real-time Analysis</h3>
 
@@ -161,7 +167,6 @@ const VideoStreamer = ({ icon, name, setSelectedExercise }) => {
             </Button>
           </div>
         </div>
-
       </div>
     </>
   );
