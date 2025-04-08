@@ -157,10 +157,10 @@ export default function GamePage() {
           baseUrl = `http://localhost:3000?gamechallenge=${game._id}&reps=${levelData.required}&level=${level}`; // Pushup server
           break;
         case 'squat':
-          baseUrl = `http://localhost:3001?gamechallenge=${game._id}&reps=${levelData.required}&level=${level}`; // Squat server
+          baseUrl = `${process.env.SQUAT_ENDPOINT}?gamechallenge=${game._id}&reps=${levelData.required}&level=${level}`; // Squat server
           break;
         case 'bicep':
-          baseUrl = `http://localhost:3002?gamechallenge=${game._id}&reps=${levelData.required}&level=${level}`; // Bicep server
+          baseUrl = `${process.env.BICEP_ENDPOINT}?gamechallenge=${game._id}&reps=${levelData.required}&level=${level}`; // Bicep server
           break;
         default:
           baseUrl = 'http://localhost:3000'; // Default fallback
