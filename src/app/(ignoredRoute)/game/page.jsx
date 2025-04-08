@@ -3,8 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Trophy, Star, Lock } from 'lucide-react';
-import { AppSidebar } from '@/components/app-sidebar';
-import { SidebarProvider } from '@/components/ui/sidebar';
 
 // Initial game data
 const initialGames = [
@@ -27,11 +25,11 @@ const initialGames = [
     description: 'Master the perfect squat form and build lower body strength',
     currentLevel: 1,
     levels: [
-      { number: 1, stars: 0, required: 10, unlocked: true },
-      { number: 2, stars: 0, required: 20, unlocked: false },
-      { number: 3, stars: 0, required: 30, unlocked: false },
-      { number: 4, stars: 0, required: 40, unlocked: false },
-      { number: 5, stars: 0, required: 50, unlocked: false },
+      { number: 1, stars: 0, required: 5, unlocked: true },
+      { number: 2, stars: 0, required: 10, unlocked: false },
+      { number: 3, stars: 0, required: 20, unlocked: false },
+      { number: 4, stars: 0, required: 30, unlocked: false },
+      { number: 5, stars: 0, required: 40, unlocked: false },
     ]
   }
 ];
@@ -151,16 +149,11 @@ export default function GamePage() {
   };
 
   return (
-    <SidebarProvider>
-      <div className="flex h-screen overflow-hidden bg-[#5C4033]">
-        <AppSidebar className="h-screen flex-shrink-0" />
-        
-        <main className="flex-1 overflow-y-auto">
-          <div className="max-w-[calc(100vw-280px)] mx-auto px-4 py-6">
+          <div className="mx-auto px-4 py-6">
             {/* Header Section */}
             <div className="mb-4">
-              <h1 className="text-2xl font-bold text-white">GAMIFICATION</h1>
-              <p className="text-gray-300 text-sm mt-1">Master each level to unlock new challenges</p>
+              <h1 className="text-2xl font-bold text-brown">GAMIFICATION</h1>
+              <p className="text-[#8B4513] text-sm mt-1">Master each level to unlock new challenges</p>
             </div>
 
             {error && (
@@ -170,7 +163,7 @@ export default function GamePage() {
             )}
 
             {/* Game Cards Stack */}
-            <div className="space-y-4">
+            <div className="space-y-4 grid grid-cols-1 md:grid-cols-2 gap-4">
               {games.map((game) => (
                 <div
                   key={game.id}
@@ -256,8 +249,6 @@ export default function GamePage() {
               ))}
             </div>
           </div>
-        </main>
-      </div>
-    </SidebarProvider>
+  
   );
 } 

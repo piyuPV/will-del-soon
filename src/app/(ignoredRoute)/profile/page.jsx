@@ -9,7 +9,7 @@ import { toast } from 'react-hot-toast';
 import Image from 'next/image';
 import { format, parseISO } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon, Loader2, Save, User, ChevronLeft, ChevronRight } from 'lucide-react';
+import { CalendarIcon, Loader2, Save, User } from 'lucide-react';
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';

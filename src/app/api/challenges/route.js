@@ -1,22 +1,27 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
-import Challenge from '@/model/challenge';
-import { connectToDB } from '@/lib/db';
+import { getUserIdFromToken } from '../userChat/route';
+import Challenge from '@/model/challenge.model';
+import  connectDB  from '@/lib/initializeDB';
 
-export async function GET() {
+export async function GET(req) {
   try {
-    const session = await auth();
-    if (!session) {
+    const token = req.cookies.get('token')?.value;
+    if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    await connectToDB();
+    await connectDB();
+
+    const userId = getUserIdFromToken(req);
+    if (!userId) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    }
 
     // Fetch public challenges and challenges the user has joined
     const challenges = await Challenge.find({
       $or: [
         { isPublic: true },
-        { 'participants.user': session.user.id }
+        { 'participants.user': userId },
       ]
     })
     .populate('createdBy', 'name')
