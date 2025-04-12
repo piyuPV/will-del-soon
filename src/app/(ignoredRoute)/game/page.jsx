@@ -147,20 +147,20 @@ export default function GamePage() {
     try {
       setError(null);
       const levelData = game.levels[level - 1];
-      console.log(levelData, "LEVELDATA ------", levelData, "LEVEL ------", level, "GAME ------", game._id)
+      console.log(levelData, "LEVELDATA ------", levelData, "LEVEL ------", level, "GAME ------", game.id)
       // Determine the server URL based on exercise type
       let baseUrl;
       const exerciseType = game.exerciseType;
       
       switch (exerciseType) {
         case 'pushup':
-          baseUrl = `http://localhost:3000?gamechallenge=${game._id}&reps=${levelData.required}&level=${level}`; // Pushup server
+          baseUrl = `http://localhost:3000?gamechallenge=${game.id}&reps=${levelData.required}&level=${level}`; // Pushup server
           break;
         case 'squat':
-          baseUrl = `${process.env.SQUAT_ENDPOINT}?gamechallenge=${game._id}&reps=${levelData.required}&level=${level}`; // Squat server
+          baseUrl = `${process.env.NEXT_PUBLIC_SQUAT_ENDPOINT}?gamechallenge=${game.id}&reps=${levelData.required}&level=${level}`; // Squat server
           break;
         case 'bicep':
-          baseUrl = `${process.env.BICEP_ENDPOINT}?gamechallenge=${game._id}&reps=${levelData.required}&level=${level}`; // Bicep server
+          baseUrl = `${process.env.NEXT_PUBLIC_BICEP_ENDPOINT}?gamechallenge=${game.id}&reps=${levelData.required}&level=${level}`; // Bicep server
           break;
         default:
           baseUrl = 'http://localhost:3000'; // Default fallback

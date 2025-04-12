@@ -1,0 +1,6 @@
+<h3>Sleep Segments</h3>
+<ul>
+  {% for seg in sleep_segments %}
+    <li>{{ seg.start }} - {{ seg.end }} ({{ seg.duration_minutes | round(1) }} mins, {{ sleep_stages[seg.stage] }})</li>
+  {% endfor %}
+</ul>

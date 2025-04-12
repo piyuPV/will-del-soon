@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Google Fit Summary</title>
+</head>
+<body>
+    <h1>Google Fit Data</h1>
+
+    <h3>Steps</h3>
+    <p>Total steps in last 24 hours: {{ steps }}</p>
+
+    <h3>Heart Rate</h3>
+    <p>Average heart rate: {{ avg_heart_rate }}</p>
+
+    <h3>Sleep Summary</h3>
+    <p>Total Sleep (Light + Deep + REM): {{ total_sleep }} minutes</p>
+
+    <h3>Sleep Segments</h3>
+    {% if sleep_segments %}
+        <ul>
+        {% for seg in sleep_segments %}
+            <li>{{ seg.start }} - {{ seg.end }} ({{ seg.duration_minutes | round(1) }} mins, {{ sleep_stages[seg.stage] }})</li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No sleep data found for the last 24 hours.</p>
+    {% endif %}
+</body>
+</html>
